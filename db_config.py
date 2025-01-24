@@ -1,9 +1,15 @@
+# create_async_engine: Creates an async engine to interact with the database.
+# AsyncSession: Represents a session for database operations in an asynchronous context.
+# async_sessionmaker: Creates a factory for producing asynchronous session objects.
+# declarative_base: Provides a base class for defining database models (ORM mappings).
+# os: Used to fetch environment variables for database configuration.
+# AsyncGenerator: Provides type hinting for generator-based async functions, like get_session.
+
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from dotenv import load_dotenv
+from typing import AsyncGenerator
 import os
 
-load_dotenv()
 
 # Database URL mapping
 DB_URLS = {
@@ -13,15 +19,18 @@ DB_URLS = {
 }
 
 # Get database configuration from environment
-DB_TYPE = os.getenv('DB_TYPE', 'pg').lower()
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '5432')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASS = os.getenv('DB_PASS', '')
-DB_NAME = os.getenv('DB_NAME', 'postgres')
-DB_SEARCH_PATH = os.getenv('DB_SEARCH_PATH', 'public')
+DB_TYPE = os.getenv('DB_TYPE')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+DB_USER = os.getenv('DB_USER')
+DB_PASS = os.getenv('DB_PASS')
+DB_NAME = os.getenv('DB_NAME')
+DB_SEARCH_PATH = os.getenv('DB_SEARCH_PATH')
 
 # Create database URL
+if not DB_TYPE:
+    raise ValueError("DB_TYPE environment variable is not set")
+
 if DB_TYPE == 'sqlite':
     DATABASE_URL = DB_URLS[DB_TYPE].format(database=DB_NAME)
 else:
@@ -36,10 +45,10 @@ else:
 # Create async engine
 engine = create_async_engine(
     DATABASE_URL,
-    echo=False,  # Set to True for SQL logging
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
+    echo=True,  # Disable SQL query logging (set True for debugging)
+    pool_pre_ping=True, # Check connection validity before using , Ensures dead connections are not used.
+    pool_size=5, # Number of connections in the connection pool
+    max_overflow=5,  # Extra connections allowed when the pool is full
     connect_args={'server_settings': {'search_path': DB_SEARCH_PATH}} if DB_TYPE == 'pg' else {}
 )
 
@@ -54,7 +63,6 @@ async_session = async_sessionmaker(
 Base = declarative_base()
 
 # Session management
-from typing import AsyncGenerator
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session

@@ -22,7 +22,7 @@ router = APIRouter(
 async def get_all_users(session: AsyncSession = Depends(get_session)):
     try:
         #The text() function takes a raw SQL string and converts it into an object that SQLAlchemy can execute.
-        query = text("SELECT * FROM app.m_user")
+        query = text("SELECT * FROM m_user")
         result = await session.execute(query)
         # dict(row._mapping): Converts each row into a Python dictionary.
         # row._mapping is a dictionary that contains the column names and values of the current row.
@@ -35,16 +35,3 @@ async def get_all_users(session: AsyncSession = Depends(get_session)):
             detail=f"Database error: {str(e)}"
         )
 
-@router.get("/user-roles", response_model=List[Dict])
-async def get_user_roles(session: AsyncSession = Depends(get_session)):
-    try:
-        query = text("SELECT * FROM app.m_role")  # Adjust table name as per your schema
-        result = await session.execute(query)
-        roles = [dict(row._mapping) for row in result]
-        return roles
-    except Exception as e:
-        print(f"Error fetching user roles: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {str(e)}"
-        )
