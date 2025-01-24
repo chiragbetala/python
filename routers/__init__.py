@@ -1,7 +1,12 @@
+# In Python, a directory that contains an __init__.py file is treated as a package.
+# It tells Python that the directory containing it should be treated as a Python package
+# Without it, you couldn't import from the routers directory as a module
+# import_module allows you to dynamically import a module at runtime, using its string name.
+
 from importlib import import_module
 from pathlib import Path
-from fastapi import APIRouter
 
+# def is a Python keyword used to define/declare a function.
 def get_all_routers():
     """Automatically discover and return all routers in the routers directory"""
     routers = []
@@ -9,6 +14,7 @@ def get_all_routers():
     
     # Get all .py files in the routers directory
     for file_path in current_dir.glob("*.py"):
+        # Gets the file name without the extension
         if file_path.stem == "__init__":
             continue
             
